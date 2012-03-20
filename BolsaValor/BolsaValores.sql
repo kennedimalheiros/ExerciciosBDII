@@ -1,4 +1,5 @@
 CREATE DATABASE bolsavalores
+
 USE bolsavalores
 
 CREATE TABLE usuarios (
@@ -45,7 +46,7 @@ CREATE TABLE transacoes (
 	acao int not null,
 	oferta decimal (8,2) not null,
 	situacao bit not null,
-	transacao_referente int not null,
+	transacao_referente int,
 	primary key (cod),
 	foreign key (usuario)
 		references usuarios (cod),
@@ -54,3 +55,15 @@ CREATE TABLE transacoes (
 	foreign key (transacao_referente)
 		references transacoes (cod)
 )
+
+INSERT INTO transacoes VALUES (0, 1, 1, 2.2, 0, null)
+INSERT INTO transacoes VALUES (1, 2, 1, 2.5, 0, 1)
+INSERT INTO transacoes VALUES (1, 2, 1, 2.6, 0, 1)
+
+select * from transacoes
+
+
+
+CREATE VIEW precomedio
+AS
+select * from 
