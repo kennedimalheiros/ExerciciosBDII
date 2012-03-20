@@ -1,0 +1,12 @@
+você foi contratado para implementar o sistema de negociação de lotes de ações na bolsa de valores
+existe um cadastro das ações e um de usuários, cada usuário pode possuir uma determinada quantidade de ações.
+Um determinado usuário quando deseja vender parte do seu lote de uma determinada ação emite uma ordem de venda
+informando a quantidade e o valor mínimo de venda por ações. usuários interessados deveram emitir uma ordem de compra
+informando a oferta (a ordem de venda) eo valor oferecido por ação.
+
+a) faça a modelagem conceitual, física e implementação do bd com índices.
+
+b) crie uma visão que contenha o preço médio ofertado por ação no dia
+
+c) crie a stored procedure que escolha a melhor ordem de compra (a que possuir o maior valor), feche a ordem
+de venda, decremente a quantidade de ações do vendedor e incremente no comprador
