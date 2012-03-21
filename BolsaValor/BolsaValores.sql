@@ -28,6 +28,7 @@ CREATE INDEX ixabreviacao ON acoes (abreviacao)
 INSERT INTO acoes values ('Acao Santo Agostinho', 'FASA')
 INSERT INTO acoes values ('Acao Montes Claros', 'MOC')
 
+SELECT * FROM acoes
 
 
 CREATE TABLE minhasacoes (
@@ -64,17 +65,19 @@ CREATE TABLE transacoes (
 		references transacoes (cod)
 )
 
-INSERT INTO transacoes VALUES (0, 1, 1, 2.2, 0, null, GETDATE())
+INSERT INTO transacoes VALUES (0, 1, 1, 2.2, 0, NULL, GETDATE())
 INSERT INTO transacoes VALUES (1, 2, 1, 2.5, 0, 1, GETDATE())
 INSERT INTO transacoes VALUES (1, 2, 1, 2.6, 0, 1, GETDATE())
+INSERT INTO transacoes VALUES (0, 1, 2, 3.3, 0, NULL, GETDATE())
+INSERT INTO transacoes VALUES (1, 2, 2, 5.1, 0, NULL, GETDATE())
+INSERT INTO transacoes VALUES (1, 2, 2, 4.6, 0, NULL, GETDATE())
 
-select * from transacoes
 
-
-
-CREATE VIEW precomedio
+CREATE VIEW PrecoMedioAcao
 AS
-
-select a.nome, AVG(t.oferta) 
-	from acoes as a
-		join minhasacoes
+SELECT a.nome AS [NOME AÇÃO], avg (t.oferta) AS [MEDIA DE OFERTA]
+	FROM acoes AS a
+		join transacoes AS t ON a.cod = t.acao
+		GROUP BY a.nome
+		
+SELECT * FROM PrecoMedioAcao		
