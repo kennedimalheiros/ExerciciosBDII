@@ -8,6 +8,9 @@ CREATE TABLE usuarios (
 	saldo decimal(8,2) not null,
 	primary key (cod)
 )
+
+CREATE INDEX ixnome ON usuarios (nome)
+
 INSERT INTO usuarios values ('Maria',233.22)
 INSERT INTO usuarios values ('Isabela',3233.23)
 
@@ -18,6 +21,9 @@ CREATE TABLE acoes (
 	abreviacao varchar(10) not null,
 	primary key (cod)
 )
+
+CREATE INDEX ixnome ON acoes (nome)
+CREATE INDEX ixabreviacao ON acoes (abreviacao)
 
 INSERT INTO acoes values ('Acao Santo Agostinho', 'FASA')
 INSERT INTO acoes values ('Acao Montes Claros', 'MOC')
@@ -35,6 +41,7 @@ CREATE TABLE minhasacoes (
 		references acoes (cod)
 )
 
+
 INSERT INTO minhasacoes values (1, 1, 22)
 INSERT INTO minhasacoes values (1, 2, 3)
 INSERT INTO minhasacoes values (2, 1, 11)
@@ -47,6 +54,7 @@ CREATE TABLE transacoes (
 	oferta decimal (8,2) not null,
 	situacao bit not null,
 	transacao_referente int,
+	data datetime,
 	primary key (cod),
 	foreign key (usuario)
 		references usuarios (cod),
@@ -56,9 +64,9 @@ CREATE TABLE transacoes (
 		references transacoes (cod)
 )
 
-INSERT INTO transacoes VALUES (0, 1, 1, 2.2, 0, null)
-INSERT INTO transacoes VALUES (1, 2, 1, 2.5, 0, 1)
-INSERT INTO transacoes VALUES (1, 2, 1, 2.6, 0, 1)
+INSERT INTO transacoes VALUES (0, 1, 1, 2.2, 0, null, GETDATE())
+INSERT INTO transacoes VALUES (1, 2, 1, 2.5, 0, 1, GETDATE())
+INSERT INTO transacoes VALUES (1, 2, 1, 2.6, 0, 1, GETDATE())
 
 select * from transacoes
 
@@ -66,4 +74,7 @@ select * from transacoes
 
 CREATE VIEW precomedio
 AS
-select * from 
+
+select a.nome, AVG(t.oferta) 
+	from acoes as a
+		join minhasacoes
