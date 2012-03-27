@@ -19,14 +19,15 @@ CREATE TABLE acoes (
 	cod int identity(1,1),
 	nome varchar(60) not null,
 	abreviacao varchar(10) not null,
+	tipo varchar(60) not null
 	primary key (cod)
 )
 
 CREATE INDEX ixnome ON acoes (nome)
 CREATE INDEX ixabreviacao ON acoes (abreviacao)
 
-INSERT INTO acoes values ('Acao Santo Agostinho', 'FASA')
-INSERT INTO acoes values ('Acao Montes Claros', 'MOC')
+INSERT INTO acoes values ('Acao Santo Agostinho', 'FASA', 'TIPO')
+INSERT INTO acoes values ('Acao Montes Claros', 'MOC', 'TIPO')
 
 SELECT * FROM acoes
 
@@ -55,14 +56,14 @@ CREATE TABLE transacoes (
 	oferta decimal (8,2) not null,
 	quantidade int not null,
 	situacao bit not null,
-	transacao_referente int,
+	transacaoOrigem int,
 	data datetime,
 	primary key (cod),
 	foreign key (usuario)
 		references usuarios (cod),
 	foreign key (acao)
 		references acoes (cod),
-	foreign key (transacao_referente)
+	foreign key (transacaoOrigem)
 		references transacoes (cod)
 )
 
@@ -74,14 +75,21 @@ INSERT INTO transacoes VALUES (1, 2, 2, 5.1, 4, 0, 4, GETDATE())
 INSERT INTO transacoes VALUES (1, 2, 2, 4.6, 4, 0, 4, GETDATE())
 
 
-GO
-CREATE VIEW PrecoMedioAcao AS 
-SELECT a.nome AS [NOME AÇÃO], avg (t.oferta) AS [MEDIA DE OFERTA]
-	FROM acoes AS a
-		join transacoes AS t ON a.cod = t.acao
-		GROUP BY a.nome		
-		
-SELECT * FROM minhasacoes	
+-- Preço medio ação Aberta(Ofertada)
+CREATE VIEW PrecoMedioAcaoAberta AS 
+SELECT acao, avg (oferta) AS [MEDIA DE OFERTA]
+	FROM transacoes
+		WHERE tipo=1 and situacao=0 and datepart(dd,data)=DATEPART(DD,GETDATE())
+		GROUP BY acao			
+
+-- Preço medio ação Fechada
+CREATE VIEW PrecoMedioAcaoFechada AS 
+SELECT acao, avg (oferta) AS [MEDIA DE OFERTA]
+	FROM transacoes
+		WHERE tipo=1 and situacao=1 and datepart(dd,data)=DATEPART(DD,GETDATE())
+		GROUP BY acao			
+
+select * from PrecoMedioAcaoFechada
 
 
 
@@ -89,45 +97,41 @@ SELECT * FROM minhasacoes
 
 use bolsavalores
 GO
-CREATE PROCEDURE MelhorOrdemCompra (@Transacao_Referente int, @CodAcao int,@Quantidade int, @CodVendedor int)
+CREATE PROCEDURE fechaLeilao (@ordeVenda int)
 AS
 
-declare @CodTransacao int
-declare @MaiorOferta int 
-declare @CodComprador int
+declare @maxOferta decimal(8,2) = (select MAX(oferta) from transacoes where tipo=1 and transacaoOrigem=4 )
 
+declare @ordeCompra int
+--set @ordeCompra = (select cod from transacoes where transacaoOrigem=@ordeVenda having MAX(oferta) and MIN(DATE))
+set @ordeCompra = (select min(cod) from transacoes where transacaoOrigem=@ordeVenda and oferta=@maxOferta)
+				
+				update transacoes set situacao=1 where cod in (@ordeVenda, @ordeCompra)
+				
+				declare @vendedor int
+				declare @comprador int
+				declare @quantidade int
+				
+				set @vendedor = (select usuario from transacoes where cod=@ordeVenda)
+				set @comprador = (select usuario from transacoes where cod=@ordeCompra)
+				declare @acao varchar
+				set @acao = (select acao from transacoes where cod=@ordeCompra)
+				set @quantidade =(select quantidade from transacoes where cod=@ordeVenda)
+				select * from minhasacoes
+				update minhasacoes 
+							set quantidade=quantidade-@quantidade
+								from minhasacoes 
+									where usuario = @vendedor and acao=@acao
+								
+				update minhasacoes 
+						set quantidade=quantidade+@quantidade
+							where usuario=@vendedor and acao=@acao
+										
+select * from transacoes
+select * from minhasacoes
 
---Pegando maior Oferta
-set @MaiorOferta = (select oferta=MAX(oferta) from transacoes where tipo=1 and transacao_referente=@transacao_referente)
+exec fechaLeilao 3
 
--- Cod Transação de maior Oferta
-set @CodTransacao = 3
-
---AJUDA COMO PEDO O COD DA TRANSAÇÃO TA DANTO ERRO AKI
---set @CodTransacao = (SELECT cod
---					from transacoes 
---						where tipo=1 and transacao_referente=@transacao_referente and oferta=@MaiorOferta
---						GROUP BY cod)
-
-
-
---Fechando Situação da Compra x Venda
-update transacoes set situacao=1 where cod=@CodTransacao
-
---Decrementaando quantidade de ações vendedor
-set @CodComprador = (select usuario from transacoes where cod=@CodTransacao)
-
-update minhasacoes set quantidade=quantidade-@Quantidade where  usuario=@CodVendedor and acao=@CodAcao
-update minhasacoes set quantidade=quantidade+@Quantidade where  usuario=@CodComprador and acao=@CodAcao
-
-
-
-
-SELECT * from transacoes
-SELECT * from minhasacoes
-
-drop procedure MelhorOrdemCompra
-
-go
-exec  MelhorOrdemCompra 1,1,5,1
+select * from transacoes
+select * from minhasacoes
 
